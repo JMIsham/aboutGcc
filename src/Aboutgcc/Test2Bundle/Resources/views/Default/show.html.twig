@@ -1,0 +1,10 @@
+{% block body %}
+    <ul>
+         {% for employees in post %}
+            <li>
+                {{ employees.name }}
+                {{ employees.details }}
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

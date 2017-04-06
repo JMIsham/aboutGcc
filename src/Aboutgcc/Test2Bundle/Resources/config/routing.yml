@@ -1,0 +1,27 @@
+aboutgcc_home:
+    path: /
+    defaults: {_controller: AboutgccTest2Bundle:Default:index}
+aboutgcc_show:
+    path: /show
+    defaults: {_controller: AboutgccTest2Bundle:Default:show}
+aboutgcc_create:
+    path: /create
+    defaults: {_controller: AboutgccTest2Bundle:Default:create}
+aboutgcc_add:
+    path: /add
+    defaults: {_controller: AboutgccTest2Bundle:Default:add}
+#    requirements: {_method: post}
+
+aboutgcc_api:
+    path: /showapi
+    defaults: {_controller: AboutgccTest2Bundle:Default:showapi}
+
+token_authentication:
+    path: /api/authenticate
+    methods: POST
+    defaults: {_controller: AboutgccTest2Bundle:Default:tokenAuthentication}
+
+admin_getEmployer:
+    path: /api/admin/employer
+    methods: GET
+    defaults: {_controller: AboutgccTest2Bundle:Admin:getAllEmployer}

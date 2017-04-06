@@ -1,0 +1,30 @@
+# Learn more about services, parameters and containers at
+# http://symfony.com/doc/current/service_container.html
+parameters:
+#    parameter_name: value
+
+services:
+#    service_name:
+#        class: AppBundle\Directory\ClassName
+#        arguments: ["@another_service_name", "plain_value", "%parameter_name%"]
+
+
+
+    acme_api.event.jwt_decoded_listener:
+        class: Aboutgcc\Test2Bundle\EventListener\JWTDecodedListener
+        arguments: [ '@request_stack' ]
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_decoded, method: onJWTDecoded}
+
+    acme_api.event.jwt_created_listene:
+        class: Aboutgcc\Test2Bundle\EventListener\JWTCreatedListener
+        arguments: [ '@request_stack' ]
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_created, method: onJWTCreated }
+
+
+
+    acme_api.event.jwt_expired_listener:
+        class: Aboutgcc\Test2Bundle\EventListener\JWTExpiredListener
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_expired, method: onJWTExpired }

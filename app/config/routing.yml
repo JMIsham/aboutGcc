@@ -1,0 +1,14 @@
+#fos_user:
+#    resource: "@FOSUserBundle/Resources/config/routing/all.xml"
+
+aboutgcc_test2:
+    resource: "@AboutgccTest2Bundle/Resources/config/routing.yml"
+    prefix:   /
+
+
+app:
+    resource: "@AppBundle/Controller/"
+    type:     annotation
+
+aboutgcc_api:
+    resource: routing_api.yml

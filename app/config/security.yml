@@ -1,0 +1,115 @@
+## To get started with security, check out the documentation:
+## http://symfony.com/doc/current/security.html
+#security:
+#    encoders:
+#            FOS\UserBundle\Model\UserInterface: bcrypt
+#
+#    role_hierarchy:
+#            ROLE_ADMIN:       ROLE_USER
+#            ROLE_SUPER_ADMIN: ROLE_ADMIN
+#
+#
+#
+#
+#
+#    # http://symfony.com/doc/current/security.html#b-configuring-how-users-are-loaded
+#    providers:
+#        fos_userbundle:
+#            id: fos_user.user_provider.username_email
+##        in_memory:
+##            memory: ~
+#
+#    firewalls:
+#        # disables authentication for assets and the profiler, adapt it according to your needs
+#        dev:
+#            pattern: ^/(_(profiler|wdt)|css|images|js)/
+#            security: false
+##        api_login:
+##            pa: ^/login
+##            stateless: true
+##            anonymous
+##       api:
+###            pattern:   ^/
+##            stateless: true
+##            lexik_jwt: ~
+#        main:
+#            anonymous: ~
+#        access_control:
+#            - { path: ^/,                 role: IS_AUTHENTICATED_FULLY }
+#            # activate different ways to authenticate
+#
+#            # http_basic: ~
+#            # http://symfony.com/doc/current/security.html#a-configuring-how-your-users-will-authenticate
+#
+#            # form_login: ~
+#            # http://symfony.com/doc/current/cookbook/security/form_login_setup.html
+# To get started with security, check out the documentation:
+# http://symfony.com/doc/current/book/security.html
+security:
+    encoders:
+        FOS\UserBundle\Model\UserInterface: bcrypt
+
+    role_hierarchy:
+        ROLE_ADMIN:       ROLE_USER
+        ROLE_EMPLOYER: ROLE_USER
+        ROLE_EMPLOYEE: ROLE_USER
+        ROLE_SUPER_ADMIN: ROLE_ADMIN
+
+    providers:
+        fos_userbundle:
+            id: fos_user.user_provider.username_email
+
+    firewalls:
+
+        api_isham:
+            pattern: ^/employer
+            anonymous: true
+
+        api_authenticate:
+            pattern: ^/api/authenticate
+            anonymous: true
+
+
+
+#        api:
+#            pattern: ^/
+#            lexik_jwt:
+#                authorization_header: # check token in Authorization Header
+#                    enabled: true
+#                    prefix:  Bearer
+#                query_parameter:      # check token in query string parameter
+#                    enabled: true
+#                    name:    bearer
+#                throw_exceptions:        false     # When an authentication failure occurs, return a 401 response immediately
+#                create_entry_point:      true      # When no authentication details are provided, create a default entry point that returns a 401 response
+
+        api_login:
+            pattern:  ^/login
+            stateless: true
+            anonymous: true
+            form_login:
+                check_path:               /login
+                require_previous_session: false
+                username_parameter:       username
+                password_parameter:       password
+                success_handler:          lexik_jwt_authentication.handler.authentication_success
+                failure_handler:          lexik_jwt_authentication.handler.authentication_failure
+            logout: true
+
+        api:
+            pattern:   ^/
+            stateless: true
+            lexik_jwt: ~
+
+
+    access_control:
+
+        - { path: ^/,                 role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/ping,             role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/doc,              role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/isham,            role: IS_AUTHENTICATED_ANONYMOUSLY }
+
+        - { path: ^/login$,           role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/register$,        role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/password/reset,   role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/password/change,  role: IS_AUTHENTICATED_FULLY }

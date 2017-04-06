@@ -1,0 +1,11 @@
+login:
+    type: rest
+    resource: Aboutgcc\Test2Bundle\Controller\APIController
+
+profile:
+    type: rest
+    resource: Aboutgcc\Test2Bundle\Controller\APIAdminController
+
+employer:
+    type: rest
+    resource: Aboutgcc\Test2Bundle\Controller\APIEmployerController
