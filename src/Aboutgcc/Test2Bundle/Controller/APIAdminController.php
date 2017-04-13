@@ -70,7 +70,7 @@ class APIAdminController extends FOSRestController implements ClassResourceInter
                 return new JsonResponse('unautherized', JsonResponse::HTTP_UNAUTHORIZED);
             }
             $em=$this->getDoctrine()->getManager();
-            $statement = $em->getConnection()->prepare("select * from (select * from (select * from employer as a where a.user_id=:id) e join fos_user b where e.user_id=b.id) c natural join (select name as c_name, id as country_id from country) d");
+            $statement = $em->getConnection()->prepare("select id,name,username,reg_number,c_name,email,contact_num,door_address,about_us from (select * from (select * from employer as a where a.user_id=:id) e join fos_user b where e.user_id=b.id) c natural join (select name as c_name, id as country_id from country) d");
             $statement->bindValue('id', $user);
             $statement->execute();
             $result=$statement->fetchAll();

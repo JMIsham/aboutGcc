@@ -9,3 +9,11 @@ profile:
 employer:
     type: rest
     resource: Aboutgcc\Test2Bundle\Controller\APIEmployerController
+
+post-employer:
+    type: rest
+    resource: Aboutgcc\Test2Bundle\Controller\EmployerPostController
+
+post-admin:
+    type: rest
+    resource: Aboutgcc\Test2Bundle\Controller\AdminPostController

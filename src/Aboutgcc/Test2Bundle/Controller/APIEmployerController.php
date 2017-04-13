@@ -51,7 +51,7 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
 
         try{
 //            tries to persist the employer associated with the user object
-            $country = $em->getRepository("AboutgccTest2Bundle:Country")->findOneBy(array("id"=>$request->request->get("Location")));
+            $country = $em->getRepository("AboutgccTest2Bundle:Country")->findOneBy(array("id"=>$request->request->get("country")));
             $form->submit($body);
             $employer->setUserId($user);
             $employer->setCountry($country);
