@@ -131,4 +131,30 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
         }
     }
 
+    /**
+     * @Get("full_info_employer/{id}")
+     */
+    public function getFullDetailsAction($id){
+        $user=$this->getUser();
+        if($user->getId()!=$id){
+            return new JsonResponse("unautherized",JsonResponse::HTTP_UNAUTHORIZED);
+        }
+        try{
+            $em=$this->getDoctrine()->getManager();
+            $statement = $em->getConnection()->prepare("select id,name,username,reg_number,c_name,country_id,email,contact_num,door_address,about_us from (select * from (select * from employer as a where a.user_id=:id) e join fos_user b where e.user_id=b.id) c natural join (select name as c_name, id as country_id from country) d");
+            $statement->bindValue('id', $id);
+            $statement->execute();
+            $result=$statement->fetchAll();
+            $size = count($result);
+            if($size===0){
+                return new JsonResponse('no content found', JsonResponse::HTTP_NO_CONTENT);
+
+            }
+            return new JsonResponse($result);
+        }catch(\Exception $e){
+            return new JsonResponse("server Error",JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
 }

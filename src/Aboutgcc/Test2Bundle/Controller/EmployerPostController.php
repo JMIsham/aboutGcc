@@ -142,6 +142,47 @@ class EmployerPostController extends FOSRestController implements ClassResourceI
 
     /**
      * @return JsonResponse
+     * @Get("post-employer/get-all")
+     */
+    public function getAllAction(){
+        $em=$this->getDoctrine()->getEntityManager();
+        $response=$this->validateUser();
+        if($response!="true"){
+            return $response;
+        }
+        $user=$this->getUser();
+        try{
+
+            $statement=$em->getConnection()->prepare("SELECT * FROM (SELECT * FROM `post` WHERE user_id=:id AND status>0) b JOIN (select id as country_id, name as country_name from country)c ON c.country_id=b.country_id JOIN (SELECT user_id,name as com_name from employer WHERE user_id=:id) a on a.user_id=b.user_id");
+            $statement->bindValue('id', $user->getId());
+            $statement->execute();
+            $results=$statement->fetchAll();
+            $size=count($results);
+            //now results contains all the posts arrays separately.
+            // the following loop will go through each result and get the list of tags associated with the result
+            // and add the list of tags as tags in the results.
+            for ($i=0;$i<$size;$i++){
+                $statement=$em->getConnection()->prepare("select tag_id,name from (select * from post_tag where post_tag.post_id=:id) b JOIN tag on tag.id=b.tag_id");
+                $statement->bindValue('id', $results[$i]["id"]);
+                $statement->execute();
+                $tags=$statement->fetchAll();
+                $results[$i]["tags"]=$tags;
+            }
+
+            if($size===0){
+                return new JsonResponse("No Posts",JsonResponse::HTTP_NO_CONTENT);
+            }
+            else{
+                return new JsonResponse($results);
+            }
+        }catch(\Exception $e){
+            return new JsonResponse($e,JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+    /**
+     * @return JsonResponse
      * @Get("post-employer/delete/{id}")
      */
     public function deleteAction($id){
