@@ -13,6 +13,7 @@ use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use FOS\RestBundle\Controller\Annotations\RouteResource;
 use FOS\RestBundle\Controller\Annotations\Get;
+use FOS\RestBundle\Controller\Annotations\Put;
 use FOS\UserBundle\Model\UserInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 
@@ -55,11 +56,11 @@ class EmployerPostController extends FOSRestController implements ClassResourceI
             $post->setCountry($country);
             $array = new \Doctrine\Common\Collections\ArrayCollection();
             //creates the array with associated tags
-            foreach ($request->request->get("tags")as $tagId ){
-                $tag=$em->getRepository("AboutgccTest2Bundle:Tag")->findOneBy(array("id"=>$tagId));
-                $array->add($tag);
-            }
-            $post->setTag($array);
+//            foreach ($request->request->get("tags")as $tagId ){
+//                $tag=$em->getRepository("AboutgccTest2Bundle:Tag")->findOneBy(array("id"=>$tagId));
+//                $array->add($tag);
+//            }
+//            $post->setTag($array);
             //sets employer associated
             $employer = $em->getRepository("AboutgccTest2Bundle:Employer")->findOneBy(array("userId"=>$user->getId()));
             $post->setUserId($employer);
@@ -88,7 +89,7 @@ class EmployerPostController extends FOSRestController implements ClassResourceI
      * @param Request $request
      * @return JsonResponse
      */
-    public function patchAction(Request $request){
+    public function putAction(Request $request){
 
         $em=$this->getDoctrine()->getEntityManager();
         try{
@@ -137,6 +138,48 @@ class EmployerPostController extends FOSRestController implements ClassResourceI
             return new JsonResponse('Oops ERROR!', JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
             return new JsonResponse('Succeeded', JsonResponse::HTTP_OK);
+
+    }
+
+    /**
+     * @param Request $request
+     * @return string|JsonResponse
+     * @Put("post-employer/set-tags")
+     *
+     */
+    public function setTagsAction(Request $request){
+        $em=$this->getDoctrine()->getEntityManager();
+        try{
+            $em->getConnection()->beginTransaction();
+            $id = $request->request->get("id");
+            $post=$em->getRepository("AboutgccTest2Bundle:Post")->findOneBy(array("id"=>$id));
+            if($post==null){
+                return new JsonResponse('unautherized', JsonResponse::HTTP_NO_CONTENT);
+            }
+            $response=$this->validateUserWithPost($post->getUserId()->getUserId()->getId());
+            if($response!="true"){
+                return $response;
+            }
+
+            //creates the array with associated tags
+            if($request->request->get("tags")!=null){
+                $array = new \Doctrine\Common\Collections\ArrayCollection();
+                foreach ($request->request->get("tags")as $tagId ){
+                    $tag=$em->getRepository("AboutgccTest2Bundle:Tag")->findOneBy(array("id"=>$tagId));
+                    $array->add($tag);
+                }
+                $post->setTag($array);
+            }
+
+            $post->setStatus(4);
+            $em->persist($post);
+            $em->flush();
+            $em->getConnection()->commit();
+        }catch (Exception $e){
+            $em->getConnection()->rollBack();
+            return new JsonResponse('Oops ERROR!', JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        return new JsonResponse('Succeeded', JsonResponse::HTTP_OK);
 
     }
 
