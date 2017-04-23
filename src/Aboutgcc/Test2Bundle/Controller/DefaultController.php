@@ -89,6 +89,7 @@ class DefaultController extends Controller
 
         echo $output;
     }
+
     public function tokenAuthenticationAction(Request $request)
     {
         $username = $request->request->get('username');
@@ -109,6 +110,24 @@ class DefaultController extends Controller
             ->encode(['roles'=>$user->getRoles(),'id' => $user->getId()]);
 
         return new JsonResponse(['token' => $token,'id'=>$user->getId(),'roles'=>$user->getRoles()]);
+    }
+    public function getAllTagsAction(){
+        $em=$this->getDoctrine()->getEntityManager();
+        try{
+
+            $statement=$em->getConnection()->prepare("select * from tag ORDER by name");
+            $statement->execute();
+            $results=$statement->fetchAll();
+            $size=count($results);
+            if($size===0){
+                return new JsonResponse("No Posts",JsonResponse::HTTP_NO_CONTENT);
+            }
+            else{
+                return new JsonResponse($results);
+            }
+        }catch(\Exception $e){
+            return new JsonResponse($e,JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
 }

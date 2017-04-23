@@ -21,6 +21,11 @@ token_authentication:
     methods: POST
     defaults: {_controller: AboutgccTest2Bundle:Default:tokenAuthentication}
 
+get_tags:
+    path: /tags
+    methods: GET
+    defaults: {_controller: AboutgccTest2Bundle:Default:getAllTags}
+
 admin_getEmployer:
     path: /api/admin/employer
     methods: GET

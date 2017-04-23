@@ -68,6 +68,9 @@ security:
         api_authenticate:
             pattern: ^/api/authenticate
             anonymous: true
+        api_tags:
+            pattern: ^/tags
+            anonymous: true
 
 
 
