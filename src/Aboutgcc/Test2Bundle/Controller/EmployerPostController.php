@@ -175,11 +175,15 @@ class EmployerPostController extends FOSRestController implements ClassResourceI
             $em->persist($post);
             $em->flush();
             $em->getConnection()->commit();
+            $statement=$em->getConnection()->prepare("select tag_id,name from (select * from post_tag where post_tag.post_id=:id) b JOIN tag on tag.id=b.tag_id");
+            $statement->bindValue('id', $id);
+            $statement->execute();
+            $tags=$statement->fetchAll();
+            return new JsonResponse($tags, JsonResponse::HTTP_OK);
         }catch (Exception $e){
             $em->getConnection()->rollBack();
             return new JsonResponse('Oops ERROR!', JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
-        return new JsonResponse('Succeeded', JsonResponse::HTTP_OK);
 
     }
 
@@ -262,7 +266,7 @@ class EmployerPostController extends FOSRestController implements ClassResourceI
                 $post->setStatus(2);
                 $em->persist($post);
                 $em->flush();
-                return new JsonResponse('Deleted', JsonResponse::HTTP_OK);
+                return new JsonResponse(JsonResponse::HTTP_OK);
             }
             return new JsonResponse('can\'t do the action', JsonResponse::HTTP_FORBIDDEN);
         }catch (Exception $e){
@@ -288,7 +292,7 @@ class EmployerPostController extends FOSRestController implements ClassResourceI
                 $post->setStatus(1);
                 $em->persist($post);
                 $em->flush();
-                return new JsonResponse('Activated', JsonResponse::HTTP_OK);
+                return new JsonResponse(JsonResponse::HTTP_OK);
             }
             return new JsonResponse('Can\'t do the action', JsonResponse::HTTP_FORBIDDEN);
         }catch (Exception $e){
