@@ -54,13 +54,6 @@ class EmployerPostController extends FOSRestController implements ClassResourceI
             //sets the country
             $country = $em->getRepository("AboutgccTest2Bundle:Country")->findOneBy(array("id"=>$request->request->get("country")));
             $post->setCountry($country);
-            $array = new \Doctrine\Common\Collections\ArrayCollection();
-            //creates the array with associated tags
-//            foreach ($request->request->get("tags")as $tagId ){
-//                $tag=$em->getRepository("AboutgccTest2Bundle:Tag")->findOneBy(array("id"=>$tagId));
-//                $array->add($tag);
-//            }
-//            $post->setTag($array);
             //sets employer associated
             $employer = $em->getRepository("AboutgccTest2Bundle:Employer")->findOneBy(array("userId"=>$user->getId()));
             $post->setUserId($employer);
@@ -217,7 +210,8 @@ class EmployerPostController extends FOSRestController implements ClassResourceI
             }
 
             if($size===0){
-                return new JsonResponse("No Posts",JsonResponse::HTTP_NO_CONTENT);
+//                exit(\Doctrine\Common\Util\Debug::dump("sucker"));
+                return new JsonResponse(JsonResponse::HTTP_NO_CONTENT);
             }
             else{
                 return new JsonResponse($results);

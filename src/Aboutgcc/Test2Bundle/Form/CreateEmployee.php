@@ -19,7 +19,13 @@ class CreateEmployee extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->add("name")->add("details");
+        $builder
+            ->add("firstName")
+            ->add("lastName")
+            ->add("contactNum")
+            ->add("nicNumber")
+            ->add("doorAddress")
+            ->add("aboutMe");
     }
 
     public function setDefaultOptions(OptionsResolver $resolver)

@@ -27,10 +27,16 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
 //        exit(\Doctrine\Common\Util\Debug::dump($request));
 
         //creates fos_user
+        $errors = array();
         $username = $request->request->get("username");
         $password = $request->request->get("password");
         $email = $request->request->get("email");
         $userManager = $this->get('fos_user.user_manager');
+        $userNameValid = $this->checkUsernameAction($username);
+        $emailNameValid = $this->checkEmailAction($email);
+        if(!$userNameValid)array_push($errors,"USERNAME_EXISTS");
+        if(!$emailNameValid)array_push($errors,"EMAIL_EXISTS");
+        if(!$userNameValid || !$emailNameValid) return new JsonResponse($errors,JsonResponse::HTTP_NOT_ACCEPTABLE);
         $user = $userManager->createUser();
         $user->setUsername($username);
         $user->setEmail($email);
@@ -60,8 +66,6 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
             $em->flush();
             $token = $this->get('lexik_jwt_authentication.encoder')
                 ->encode(['roles'=>$user->getRoles(),'username'=>$user->getUsername(),'id' => $user->getId()]);
-
-
             // Return genereted tocken
             return new JsonResponse(['token' => $token,'id'=>$user->getId(),'roles'=>$user->getRoles()]);
         }catch(\Exception $e){
@@ -72,10 +76,6 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
         }finally{
             $em->close();
         }
-
-
-
-
     }
 
     
@@ -97,10 +97,12 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
             $size=count($result);
 
             if($size===0){
-                return new JsonResponse("valid Username",JsonResponse::HTTP_ACCEPTED);
+//                return new JsonResponse("valid Username",JsonResponse::HTTP_ACCEPTED);
+                return true;
             }
             else{
-                return new JsonResponse("invalid username",JsonResponse::HTTP_NOT_ACCEPTABLE);
+//                return new JsonResponse("invalid username",JsonResponse::HTTP_NOT_ACCEPTABLE);
+                return false;
             }
         }catch(\Exception $e){
             return new JsonResponse("server Error",JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
@@ -119,12 +121,14 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
             $statement->execute();
             $result=$statement->fetchAll();
             $size=count($result);
-
             if($size===0){
-                return new JsonResponse("valid email",JsonResponse::HTTP_ACCEPTED);
+//                return new JsonResponse("valid email",JsonResponse::HTTP_ACCEPTED);
+                return true;
             }
+
             else{
-                return new JsonResponse("invalid email",JsonResponse::HTTP_NOT_ACCEPTABLE);
+//                return new JsonResponse("invalid email",JsonResponse::HTTP_NOT_ACCEPTABLE);
+                return false;
             }
         }catch(\Exception $e){
             return new JsonResponse("server Error",JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
