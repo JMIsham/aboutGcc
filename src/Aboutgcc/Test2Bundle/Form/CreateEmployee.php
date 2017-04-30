@@ -14,6 +14,9 @@ use Symfony\Component\Form\AbstractType;
 //use Symfony\Component\Form\Extension\Core\Type\;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
+
 
 class CreateEmployee extends AbstractType
 {
@@ -24,8 +27,8 @@ class CreateEmployee extends AbstractType
             ->add("lastName")
             ->add("contactNum")
             ->add("nicNumber")
-            ->add("doorAddress")
-            ->add("aboutMe");
+            ->add("doorAddress",TextType::class)
+            ->add("aboutMe",TextType::class);
     }
 
     public function setDefaultOptions(OptionsResolver $resolver)

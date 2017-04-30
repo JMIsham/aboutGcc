@@ -61,13 +61,18 @@ security:
 
     firewalls:
 
-        api_isham:
+        api_Employer:
             pattern: ^/employer
+            anonymous: true
+
+        api_Employee:
+            pattern: ^/employee
             anonymous: true
 
         api_authenticate:
             pattern: ^/api/authenticate
             anonymous: true
+
         api_tags:
             pattern: ^/tags
             anonymous: true

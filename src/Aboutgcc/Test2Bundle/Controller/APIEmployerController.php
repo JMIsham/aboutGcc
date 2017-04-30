@@ -24,8 +24,6 @@ use FOS\RestBundle\Controller\Annotations\RouteResource;
 class APIEmployerController extends FOSRestController implements ClassResourceInterface
 {
     public function postAction(Request $request){
-//        exit(\Doctrine\Common\Util\Debug::dump($request));
-
         //creates fos_user
         $errors = array();
         $username = $request->request->get("username");
@@ -97,11 +95,9 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
             $size=count($result);
 
             if($size===0){
-//                return new JsonResponse("valid Username",JsonResponse::HTTP_ACCEPTED);
                 return true;
             }
             else{
-//                return new JsonResponse("invalid username",JsonResponse::HTTP_NOT_ACCEPTABLE);
                 return false;
             }
         }catch(\Exception $e){
@@ -122,12 +118,10 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
             $result=$statement->fetchAll();
             $size=count($result);
             if($size===0){
-//                return new JsonResponse("valid email",JsonResponse::HTTP_ACCEPTED);
                 return true;
             }
 
             else{
-//                return new JsonResponse("invalid email",JsonResponse::HTTP_NOT_ACCEPTABLE);
                 return false;
             }
         }catch(\Exception $e){

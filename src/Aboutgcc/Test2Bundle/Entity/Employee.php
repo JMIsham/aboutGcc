@@ -56,7 +56,7 @@ class Employee
     protected $contactNum;
 
     /**
-     * @ORM\Column(type = "string" , length = 100  ,unique=true)
+     * @ORM\Column(type = "string" ,length=10 ,unique=true)
      * @Assert\NotBlank()
      */
     protected $nicNumber;
