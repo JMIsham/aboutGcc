@@ -11,6 +11,7 @@ use Aboutgcc\Test2Bundle\Entity\Employee;
 use Aboutgcc\Test2Bundle\Form\CreateEmployee;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\Routing\ClassResourceInterface;
+use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Controller\Annotations\Post;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -79,6 +80,7 @@ class APIEmployeeController extends FOSRestController implements ClassResourceIn
             $employee->setUserId($user);
             $employee->setCountry($country);
             $employee->setStatus(1);
+            $employee->setDp("DEFAULT.jpeg");
             $initiatedDate = date_create();
             $employee->setInitiatedDate($initiatedDate);
 //            exit(\Doctrine\Common\Util\Debug::dump($employee));
@@ -197,5 +199,97 @@ class APIEmployeeController extends FOSRestController implements ClassResourceIn
         }catch(\Exception $e){
             return new JsonResponse("server Error",JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * @Get("full_info_employee")
+     */
+    public function getFullDetailsAction(){
+        $user=$this->getUser();
+        $id=$user->getId();
+        try{
+            $em=$this->getDoctrine()->getManager();
+            $statement = $em->getConnection()->prepare("select cv,dp,first_name,last_name,username,nic_number,c_name,country_id,email,contact_num,door_address,about_me from (select * from (select * from employee as a where a.user_id=:id) e join (select username,email,id as u_id from fos_user ) b where e.user_id=b.u_id) c natural join (select name as c_name, country.id as country_id from country) d");
+            $statement->bindValue('id', $id);
+            $statement->execute();
+            $result=$statement->fetchAll();
+            $size = count($result);
+            if($size===0){
+                return new JsonResponse('no content found', JsonResponse::HTTP_NO_CONTENT);
+
+            }
+            return new JsonResponse($result);
+        }catch(\Exception $e){
+            exit(\Doctrine\Common\Util\Debug::dump($e));
+            return new JsonResponse("server Error",JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+    /**
+     * @Post("set-cv-employee")
+     */
+    public function setCvAction(Request $request){
+        try{
+            $validation = $this->validateUser();
+            if($validation!='true') return $validation;
+            $user = $this->getUser();
+            $id = $user->getId();
+            $em=$this->getDoctrine()->getEntityManager();
+            $employee=$em->getRepository("AboutgccTest2Bundle:Employee")->findOneBy(array("userId"=>$id));
+            $file = $request->files->all()["cv"];
+            $fileName = md5(uniqid()).'.'.$file->guessExtension();
+            $file->move(
+                "E:/xampp/htdocs/aboutGccAsserts/CVs",
+                $fileName
+            );
+            $employee->setCv($fileName);
+            $em->persist($employee);
+            $em->flush();
+            return new JsonResponse($fileName,JsonResponse::HTTP_OK);
+        }catch(\Exception $e){
+            exit(\Doctrine\Common\Util\Debug::dump($e));
+            return new JsonResponse(JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+    /**
+     * @Post("set-dp-employee")
+     */
+    public function setDpAction(Request $request){
+        try{
+            $validation = $this->validateUser();
+            if($validation!='true') return $validation;
+            $user = $this->getUser();
+            $id = $user->getId();
+            $em=$this->getDoctrine()->getEntityManager();
+            $employer=$em->getRepository("AboutgccTest2Bundle:Employee")->findOneBy(array("userId"=>$id));
+            $file = $request->files->all()["dp"];
+            $fileName = md5(uniqid()).'.'.$file->guessExtension();
+            $file->move(
+                "E:/xampp/htdocs/aboutGccAsserts/DPs",
+                $fileName
+            );
+
+            $employer->setDp($fileName);
+            $em->persist($employer);
+            $em->flush();
+            return new JsonResponse($fileName,JsonResponse::HTTP_OK);
+        }catch (\Exception $e){
+
+            return new JsonResponse(JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+    }
+    /**
+     * @return string|JsonResponse
+     */
+    public function validateUser(){
+        //this function checks for the valid user. for now only employer ca create a post
+        $user=$this->getUser();
+        $roles = $user->getRoles();
+        if(array_search("ROLE_EMPLOYEE",$roles)===false){
+            return new JsonResponse('unautherized', JsonResponse::HTTP_UNAUTHORIZED);
+        }
+        return "true";
     }
 }

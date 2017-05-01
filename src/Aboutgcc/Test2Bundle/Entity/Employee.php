@@ -101,6 +101,51 @@ class Employee
      */
     protected $status;
 
+    /**
+     * @ORM\Column(type="string")
+     * @Assert\File(mimeTypes={ "application/pdf" })
+     */
+    protected $cv;
+     /**
+     * @ORM\Column(type="string")
+     * @Assert\File(mimeTypes={ "application/jpeg" })
+     */
+    protected $dp;
+
+    /**
+     * @return mixed
+     */
+    public function getDp()
+    {
+        return $this->dp;
+    }
+
+    /**
+     * @param mixed $dp
+     */
+    public function setDp($dp)
+    {
+        $this->dp = $dp;
+    }
+
+
+
+    /**
+     * @return mixed
+     */
+    public function getCv()
+    {
+        return $this->cv;
+    }
+
+    /**
+     * @param mixed $cv
+     */
+    public function setCv($cv)
+    {
+        $this->cv = $cv;
+    }
+
     public function __construct() {
         $this->tags = new \Doctrine\Common\Collections\ArrayCollection();
     }

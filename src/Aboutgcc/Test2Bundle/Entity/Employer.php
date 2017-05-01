@@ -73,6 +73,28 @@ class Employer
     protected $aboutUs;
 
     /**
+     * @ORM\Column(type="string")
+     * @Assert\File(mimeTypes={ "application/jpeg" })
+     */
+    protected $dp;
+
+    /**
+     * @return mixed
+     */
+    public function getDp()
+    {
+        return $this->dp;
+    }
+
+    /**
+     * @param mixed $dp
+     */
+    public function setDp($dp)
+    {
+        $this->dp = $dp;
+    }
+
+    /**
      * @return mixed
      */
     public function getName()

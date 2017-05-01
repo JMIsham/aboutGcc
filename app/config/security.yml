@@ -77,6 +77,10 @@ security:
             pattern: ^/tags
             anonymous: true
 
+        api_posts:
+            pattern: ^/posts
+            anonymous: true
+
 
 
 #        api:

@@ -10,6 +10,7 @@ namespace Aboutgcc\Test2Bundle\Controller;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use FOS\RestBundle\Controller\Annotations\Get;
+use FOS\RestBundle\Controller\Annotations\Post;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Aboutgcc\Test2Bundle\Entity\Employer;
@@ -59,6 +60,7 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
             $form->submit($body);
             $employer->setUserId($user);
             $employer->setCountry($country);
+            $employer->setDp("DEFAULT.jpeg");
             $em = $this->getDoctrine()->getManager();
             $em->persist($employer);
             $em->flush();
@@ -105,6 +107,34 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
         }
     }
     /**
+     * @Post("set-dp-employer")
+     */
+    public function setDpAction(Request $request){
+        try{
+            $validation = $this->validateUser();
+            if($validation!='true') return $validation;
+            $user = $this->getUser();
+            $id = $user->getId();
+            $em=$this->getDoctrine()->getEntityManager();
+            $employer=$em->getRepository("AboutgccTest2Bundle:Employer")->findOneBy(array("userId"=>$id));
+            $file = $request->files->all()["dp"];
+            $fileName = md5(uniqid()).'.'.$file->guessExtension();
+            $file->move(
+                "E:/xampp/htdocs/aboutGccAsserts/DPs",
+                $fileName
+            );
+
+            $employer->setDp($fileName);
+            $em->persist($employer);
+            $em->flush();
+            return new JsonResponse($fileName,JsonResponse::HTTP_OK);
+        }catch (\Exception $e){
+
+            exit(\Doctrine\Common\Util\Debug::dump($e));
+        }
+
+    }
+    /**
      *
      * @Get("employer/check_email/{email}")
      *
@@ -139,7 +169,7 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
         }
         try{
             $em=$this->getDoctrine()->getManager();
-            $statement = $em->getConnection()->prepare("select id,name,username,reg_number,c_name,country_id,email,contact_num,door_address,about_us from (select * from (select * from employer as a where a.user_id=:id) e join fos_user b where e.user_id=b.id) c natural join (select name as c_name, id as country_id from country) d");
+            $statement = $em->getConnection()->prepare("select dp,id,name,username,reg_number,c_name,country_id,email,contact_num,door_address,about_us from (select * from (select * from employer as a where a.user_id=:id) e join fos_user b where e.user_id=b.id) c natural join (select name as c_name, id as country_id from country) d");
             $statement->bindValue('id', $id);
             $statement->execute();
             $result=$statement->fetchAll();
@@ -155,4 +185,16 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
 
     }
 
+    /**
+     * @return string|JsonResponse
+     */
+    public function validateUser(){
+        //this function checks for the valid user. for now only employer ca create a post
+        $user=$this->getUser();
+        $roles = $user->getRoles();
+        if(array_search("ROLE_EMPLOYER",$roles)===false){
+            return new JsonResponse('unautherized', JsonResponse::HTTP_UNAUTHORIZED);
+        }
+        return "true";
+    }
 }

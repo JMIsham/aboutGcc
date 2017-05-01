@@ -129,5 +129,30 @@ class DefaultController extends Controller
             return new JsonResponse($e,JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+    public function getAllPostAction(){
+        $em= $this->getDoctrine()->getEntityManager();
+
+         try{
+             $statement=$em->getConnection()->prepare(" select * from (select * from post where status=1) a NATURAL JOIN (select id as country_id ,name as c_name from country) b");
+             $statement->execute();
+             $results=$statement->fetchAll();
+             $size=count($results);
+             if($size===0){
+                 return new JsonResponse("No Posts",JsonResponse::HTTP_NO_CONTENT);
+             }
+             else{
+                 for ($i=0;$i<$size;$i++){
+                     $statement=$em->getConnection()->prepare("select tag_id,name from (select * from post_tag where post_tag.post_id=:id) b JOIN tag on tag.id=b.tag_id");
+                     $statement->bindValue('id', $results[$i]["id"]);
+                     $statement->execute();
+                     $tags=$statement->fetchAll();
+                     $results[$i]["tags"]=$tags;
+                 }
+                 return new JsonResponse($results);
+             }
+         }catch(\Exception $e){
+             return new JsonResponse($e,JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+         }
+    }
 
 }

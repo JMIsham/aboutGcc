@@ -26,6 +26,11 @@ get_tags:
     methods: GET
     defaults: {_controller: AboutgccTest2Bundle:Default:getAllTags}
 
+get_posts:
+    path: /posts
+    methods: GET
+    defaults: {_controller: AboutgccTest2Bundle:Default:getAllPost}
+
 admin_getEmployer:
     path: /api/admin/employer
     methods: GET

@@ -164,7 +164,7 @@ class EmployerPostController extends FOSRestController implements ClassResourceI
                 $post->setTag($array);
             }
 
-            $post->setStatus(4);
+//            $post->setStatus(4);
             $em->persist($post);
             $em->flush();
             $em->getConnection()->commit();
