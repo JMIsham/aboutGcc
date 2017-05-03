@@ -80,6 +80,9 @@ security:
         api_posts:
             pattern: ^/posts
             anonymous: true
+        api_post_details:
+            pattern: ^/post-full-details
+            anonymous: true
 
 
 

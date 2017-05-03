@@ -31,6 +31,11 @@ get_posts:
     methods: GET
     defaults: {_controller: AboutgccTest2Bundle:Default:getAllPost}
 
+get_post_deta;:
+    path: /post-full-details/{postID}
+    methods: GET
+    defaults: {_controller: AboutgccTest2Bundle:Default:getFullPost}
+
 admin_getEmployer:
     path: /api/admin/employer
     methods: GET
