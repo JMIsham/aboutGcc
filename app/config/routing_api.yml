@@ -25,3 +25,7 @@ post-admin:
 post-employee:
     type: rest
     resource: Aboutgcc\Test2Bundle\Controller\EmployeePostController
+
+admin-employee:
+    type: rest
+    resource: Aboutgcc\Test2Bundle\Controller\AdminEmployeeController

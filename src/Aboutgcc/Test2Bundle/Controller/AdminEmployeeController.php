@@ -2,11 +2,12 @@
 /**
  * Created by PhpStorm.
  * User: Isham
- * Date: 2/25/2017
- * Time: 2:28 PM
+ * Date: 5/4/2017
+ * Time: 11:59 AM
  */
 
 namespace Aboutgcc\Test2Bundle\Controller;
+
 
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\Routing\ClassResourceInterface;
@@ -17,17 +18,16 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Doctrine\DBAL\DriverManager;
 
-/**
- * Class APIProfileController
- * @package Aboutgcc\Test2Bundle\Controller
- *
- * @RouteResource("admin", pluralize=false)
- */
 
-class APIAdminController extends FOSRestController implements ClassResourceInterface
+/**
+ * Class AdminEmployeeController
+ * @package Aboutgcc\Test2Bundle\Controller
+ * @RouteResource("admin-employee", pluralize=false)
+ */
+class AdminEmployeeController extends FOSRestController implements ClassResourceInterface
 {
     /**
-     * @Get("admin/employers")
+     *
      * @return mixed
      */
     public function getAction()
@@ -39,7 +39,7 @@ class APIAdminController extends FOSRestController implements ClassResourceInter
                 return new JsonResponse('unautherized', JsonResponse::HTTP_UNAUTHORIZED);
             }
             $em=$this->getDoctrine()->getManager();
-            $statement = $em->getConnection()->prepare("select dp,name,contact_num,email,id,enabled from employer as a join fos_user as b where a.user_id=b.id ");
+            $statement = $em->getConnection()->prepare("select dp,cv,first_name,last_name,contact_num,email,id,enabled,status from employee as a join fos_user as b where a.user_id=b.id");
             $statement->execute();
             $result=$statement->fetchAll();
             $size = count($result);
@@ -57,7 +57,7 @@ class APIAdminController extends FOSRestController implements ClassResourceInter
 
     /**
      *
-     * @Get("admin/employer/{user}")
+     * @Get("admin-employee/details/{user}")
      *
      */
     public function getEmployerAction($user){
@@ -68,31 +68,16 @@ class APIAdminController extends FOSRestController implements ClassResourceInter
                 return new JsonResponse('unautherized', JsonResponse::HTTP_UNAUTHORIZED);
             }
             $em=$this->getDoctrine()->getManager();
-            $statement = $em->getConnection()->prepare("select dp,id,name,username,reg_number,c_name,email,contact_num,door_address,about_us from (select * from (select * from employer as a where a.user_id=:id) e join fos_user b where e.user_id=b.id) c natural join (select name as c_name, id as country_id from country) d");
+            $statement = $em->getConnection()->prepare("select id,name,username,reg_number,c_name,email,contact_num,door_address,about_us from (select * from (select * from employer as a where a.user_id=:id) e join fos_user b where e.user_id=b.id) c natural join (select name as c_name, id as country_id from country) d");
             $statement->bindValue('id', $user);
             $statement->execute();
-            $details=$statement->fetchAll();
-            $size = count($details);
+            $result=$statement->fetchAll();
+            $size = count($result);
             if($size===0){
                 return new JsonResponse('no content found', JsonResponse::HTTP_NO_CONTENT);
 
             }
-            $statement=$em->getConnection()->prepare("SELECT * FROM (SELECT * FROM `post` WHERE user_id=:id AND status>0) b JOIN (select id as country_id, name as country_name from country)c ON c.country_id=b.country_id JOIN (SELECT user_id,name as com_name from employer WHERE user_id=:id) a on a.user_id=b.user_id");
-            $statement->bindValue('id', $user);
-            $statement->execute();
-            $results=$statement->fetchAll();
-            $size=count($results);
-            //now results contains all the posts arrays separately.
-            // the following loop will go through each result and get the list of tags associated with the result
-            // and add the list of tags as tags in the results.
-            for ($i=0;$i<$size;$i++){
-                $statement=$em->getConnection()->prepare("select tag_id,name from (select * from post_tag where post_tag.post_id=:id) b JOIN tag on tag.id=b.tag_id");
-                $statement->bindValue('id', $results[$i]["id"]);
-                $statement->execute();
-                $tags=$statement->fetchAll();
-                $results[$i]["tags"]=$tags;
-            }
-            return new JsonResponse([$details,$results]);
+            return new JsonResponse($result);
         }catch (\Exception $e){
             return new JsonResponse('oops there was an error', JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -101,7 +86,7 @@ class APIAdminController extends FOSRestController implements ClassResourceInter
     }
     /**
      *
-     * @Get("admin/block_employer/{user}")
+     * @Get("admin-employee/block/{user}")
      *
      */
     public function blockEmployerAction($user){
@@ -122,7 +107,7 @@ class APIAdminController extends FOSRestController implements ClassResourceInter
     }
     /**
      *
-     * @Get("admin/unblock_employer/{user}")
+     * @Get("admin-employee/unblock/{user}")
      *
      */
     public function unblockEmployerAction($user){
@@ -151,8 +136,5 @@ class APIAdminController extends FOSRestController implements ClassResourceInter
             return new JsonResponse('oops there was an error', JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
-
-
 
 }

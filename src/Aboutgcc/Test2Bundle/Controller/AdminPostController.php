@@ -42,7 +42,7 @@ class AdminPostController extends FOSRestController implements ClassResourceInte
             if($response!="true"){
                 return $response;
             }
-            if($post->getStatus()==3){
+            if($post->getStatus()>=3){
                 $post->setStatus(1);
                 $em->persist($post);
                 $em->flush();
@@ -71,7 +71,7 @@ class AdminPostController extends FOSRestController implements ClassResourceInte
             }
             //admin cannot suspend already deleted post
             if($post->getStatus()!=0){
-                $post->setStatus(3);
+                $post->setStatus(5);
                 $em->persist($post);
                 $em->flush();
                 return new JsonResponse('Activated', JsonResponse::HTTP_OK);
@@ -81,6 +81,47 @@ class AdminPostController extends FOSRestController implements ClassResourceInte
             return new JsonResponse('Oops ERROR!', JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    /**
+     * @return string|JsonResponse
+     * @Get("post-admin/get-all")
+     */
+    public function getAllAction(){
+
+        try{
+            $response=$this->validateUser();
+            if($response!="true"){
+                return $response;
+            }
+            $em=$this->getDoctrine()->getEntityManager();
+            $statement=$em->getConnection()->prepare("SELECT * FROM (SELECT * FROM `post` WHERE  status>0) b JOIN (select id as country_id, name as country_name from country)c ON c.country_id=b.country_id JOIN (SELECT user_id,name as com_name from employer ) a on a.user_id=b.user_id ORDER BY com_name");
+            $statement->execute();
+            $results=$statement->fetchAll();
+            $size=count($results);
+            //now results contains all the posts arrays separately.
+            // the following loop will go through each result and get the list of tags associated with the result
+            // and add the list of tags as tags in the results.
+            for ($i=0;$i<$size;$i++){
+                $statement=$em->getConnection()->prepare("select tag_id,name from (select * from post_tag where post_tag.post_id=:id) b JOIN tag on tag.id=b.tag_id");
+                $statement->bindValue('id', $results[$i]["id"]);
+                $statement->execute();
+                $tags=$statement->fetchAll();
+                $results[$i]["tags"]=$tags;
+            }
+
+            if($size===0){
+//                exit(\Doctrine\Common\Util\Debug::dump("sucker"));
+                return new JsonResponse(JsonResponse::HTTP_NO_CONTENT);
+            }
+            else{
+                return new JsonResponse($results);
+            }
+        }catch(\Exception $e){
+            return new JsonResponse($e,JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
 
     /**
      * @return string|JsonResponse
