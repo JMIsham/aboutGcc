@@ -39,7 +39,7 @@ class AdminEmployeeController extends FOSRestController implements ClassResource
                 return new JsonResponse('unautherized', JsonResponse::HTTP_UNAUTHORIZED);
             }
             $em=$this->getDoctrine()->getManager();
-            $statement = $em->getConnection()->prepare("select dp,cv,first_name,last_name,contact_num,email,id,enabled,status from employee as a join fos_user as b where a.user_id=b.id");
+            $statement = $em->getConnection()->prepare("select * from (select dp,cv,first_name,last_name,contact_num,user_id,status from employee) a join (select email,id,enabled from fos_user) b where a.user_id=b.id");
             $statement->execute();
             $result=$statement->fetchAll();
             $size = count($result);
@@ -49,6 +49,7 @@ class AdminEmployeeController extends FOSRestController implements ClassResource
             }
             return new JsonResponse($result);
         }catch (\Exception $e){
+            exit(\Doctrine\Common\Util\Debug::dump($e));
             return new JsonResponse('oops there was an error', JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -60,7 +61,7 @@ class AdminEmployeeController extends FOSRestController implements ClassResource
      * @Get("admin-employee/details/{user}")
      *
      */
-    public function getEmployerAction($user){
+    public function getEmployeeAction($user){
         try{
 
             $roles = $this->getUser()->getRoles();
@@ -68,16 +69,28 @@ class AdminEmployeeController extends FOSRestController implements ClassResource
                 return new JsonResponse('unautherized', JsonResponse::HTTP_UNAUTHORIZED);
             }
             $em=$this->getDoctrine()->getManager();
-            $statement = $em->getConnection()->prepare("select id,name,username,reg_number,c_name,email,contact_num,door_address,about_us from (select * from (select * from employer as a where a.user_id=:id) e join fos_user b where e.user_id=b.id) c natural join (select name as c_name, id as country_id from country) d");
+            $statement = $em->getConnection()->prepare(
+                    "select * from(
+                    select * from (
+                    select user_id,country_id,first_name,last_name,contact_num,nic_number,door_address,about_me,initiated_date,status,cv,dp from employee where user_id=:id) e 
+                    join 
+                    (select username,email,id from fos_user) b 
+                    where e.user_id=b.id) u 
+                    natural join 
+                    (select name as country_name,id as country_id from country) c");
             $statement->bindValue('id', $user);
             $statement->execute();
             $result=$statement->fetchAll();
             $size = count($result);
+            $statement2=$em->getConnection()->prepare("select * from (select * from(select first_name,last_name,user_id,id as employee_id,cv,dp from employee where user_id=:id) a natural join application) c natural join (select subject,id as post_id from post) p");
+            $statement2->bindValue('id', $user);
+            $statement2->execute();
+            $result2=$statement2->fetchAll();
             if($size===0){
                 return new JsonResponse('no content found', JsonResponse::HTTP_NO_CONTENT);
 
             }
-            return new JsonResponse($result);
+            return new JsonResponse([$result,$result2]);
         }catch (\Exception $e){
             return new JsonResponse('oops there was an error', JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -89,7 +102,7 @@ class AdminEmployeeController extends FOSRestController implements ClassResource
      * @Get("admin-employee/block/{user}")
      *
      */
-    public function blockEmployerAction($user){
+    public function blockEmployeeAction($user){
         try{
 
             $roles = $this->getUser()->getRoles();
@@ -110,7 +123,7 @@ class AdminEmployeeController extends FOSRestController implements ClassResource
      * @Get("admin-employee/unblock/{user}")
      *
      */
-    public function unblockEmployerAction($user){
+    public function unblockEmployeeAction($user){
         try{
 
             $roles = $this->getUser()->getRoles();

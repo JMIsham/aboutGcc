@@ -51,7 +51,7 @@ class EmployeePostController extends FOSRestController implements ClassResourceI
             $application->setEmployeeId($employee);
             $application->setPostId($post);
             $application->setDate($date);
-            $application->setStatus(1);
+            $application->setStatus(3);
             $em->persist($application);
             $em->flush();
             return new JsonResponse(JsonResponse::HTTP_OK);
