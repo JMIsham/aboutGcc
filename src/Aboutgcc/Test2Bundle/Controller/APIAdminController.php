@@ -12,10 +12,13 @@ use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use FOS\RestBundle\Controller\Annotations\RouteResource;
 use FOS\RestBundle\Controller\Annotations\Get;
+use FOS\RestBundle\Controller\Annotations\Put;
 use FOS\UserBundle\Model\UserInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Doctrine\DBAL\DriverManager;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class APIProfileController
@@ -152,7 +155,35 @@ class APIAdminController extends FOSRestController implements ClassResourceInter
         }
     }
 
+    /**
+     *
+     * @Put("user/change-password")
+     *
+     */
+    public function changePasswordAction(Request $request){
+        try{
 
+            $userManager = $this->get('fos_user.user_manager');
+            $password = $request->request->get('password');
+            $newPassword1 = $request->request->get('newPassword1');
+            $newPassword2 = $request->request->get('newPassword2');
+
+            if($newPassword1!=$newPassword2 || $newPassword1==null) return new JsonResponse("bad data",JsonResponse::HTTP_NOT_ACCEPTABLE);
+            $factory = $this->get('security.encoder_factory');
+
+            $user = $this->getUser();
+
+            $encoder = $factory->getEncoder($user);
+
+            $passwordValid = ($encoder->isPasswordValid($user->getPassword(),$password,$user->getSalt()));
+            if(!$passwordValid) return new JsonResponse(JsonResponse::HTTP_UNAUTHORIZED);
+            $user->setPlainPassword($newPassword1);
+            $userManager->updateUser($user);
+            return new JsonResponse(JsonResponse::HTTP_OK);
+        }catch (Exception $e){
+            return new JsonResponse(JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 
 
 }
