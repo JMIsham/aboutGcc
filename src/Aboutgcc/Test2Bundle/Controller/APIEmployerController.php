@@ -82,10 +82,74 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
     public function back($request){
         exit(\Doctrine\Common\Util\Debug::dump($request));
     }
+
     /**
-     *
+     * @Post("edit-employer-info")
+     */
+    public function editDetailsAction(Request $request){
+        $validation = $this->validateUser();
+        if($validation!='true') return $validation;
+
+        $userManager = $this->get('fos_user.user_manager');
+        $user = $this->getUser();
+
+        $em = $this->get('doctrine.orm.entity_manager');
+        $employer=$em->getRepository("AboutgccTest2Bundle:Employer")->findOneBy(array("userId"=>$user->getId()));
+//        exit(\Doctrine\Common\Util\Debug::dump($employer));
+        $errors = array();
+        $username = $request->request->get("username");
+        $email = $request->request->get("email");
+
+        $userNameValid =$user->getUsername()==$username? true: $this->checkUsernameAction($username);
+        $emailNameValid =$user->getEmail()==$email?true: $this->checkEmailAction($email);
+
+        if(!$userNameValid)array_push($errors,"USERNAME_EXISTS");
+        if(!$emailNameValid)array_push($errors,"EMAIL_EXISTS");
+        if(!$userNameValid || !$emailNameValid) return new JsonResponse($errors,JsonResponse::HTTP_NOT_ACCEPTABLE);
+
+
+        $user->setUsername($username);
+        $user->setEmail($email);
+        try{
+            $userManager->updateUser($user);
+        }catch (\Exception $e){
+            exit(\Doctrine\Common\Util\Debug::dump($e));
+        }
+        //creates employer
+
+        $body = $request->request->all();
+//        exit(\Doctrine\Common\Util\Debug::dump($employer));
+        $form = $this->createForm(CreateEmployer::class, $employer);
+
+        $form->handleRequest($request);
+
+        try{
+//            tries to persist the employer associated with the user object
+            $country = $em->getRepository("AboutgccTest2Bundle:Country")->findOneBy(array("id"=>$request->request->get("country")));
+            $form->submit($body,false);
+            $employer->setUserId($user);
+            if($country!=null){
+                $employer->setCountry($country);
+            }
+
+            $em = $this->getDoctrine()->getManager();
+            $em->persist($employer);
+            $em->flush();
+            $token = $this->get('lexik_jwt_authentication.encoder')
+                ->encode(['roles'=>$user->getRoles(),'username'=>$user->getUsername(),'id' => $user->getId()]);
+            // Return genereted tocken
+            return new JsonResponse(['token' => $token,'id'=>$user->getId(),'roles'=>$user->getRoles()]);
+        }catch(\Exception $e){
+            //if there is something goes wrong this will terminate the process and undo all the queries
+            $em->close();
+            $userManager->deleteUser($user);
+            throw $this->createAccessDeniedException();
+        }finally{
+            $em->close();
+        }
+    }
+    /**
      * @Get("employer/check_username/{username}")
-     *
      */
     public function checkUsernameAction($username){
         try{
@@ -192,6 +256,7 @@ class APIEmployerController extends FOSRestController implements ClassResourceIn
         //this function checks for the valid user. for now only employer ca create a post
         $user=$this->getUser();
         $roles = $user->getRoles();
+
         if(array_search("ROLE_EMPLOYER",$roles)===false){
             return new JsonResponse('unautherized', JsonResponse::HTTP_UNAUTHORIZED);
         }

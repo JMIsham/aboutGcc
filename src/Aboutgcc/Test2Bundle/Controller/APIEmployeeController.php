@@ -102,6 +102,85 @@ class APIEmployeeController extends FOSRestController implements ClassResourceIn
         }
     }
     /**
+     * @Post("edit-employee-info")
+     */
+    public function putAction(Request $request){
+        $validation = $this->validateUser();
+        if($validation!='true') return $validation;
+        $errors = array();
+        $userManager = $this->get('fos_user.user_manager');
+        $user = $this->getUser();
+
+        $em = $this->get('doctrine.orm.entity_manager');
+        $employee=$em->getRepository("AboutgccTest2Bundle:Employee")->findOneBy(array("userId"=>$user->getId()));
+
+
+        $username = $request->request->get("username");
+        $email = $request->request->get("email");
+        $nicNumber = $request->request->get("nicNumber");
+        $phoneNumber = $request->request->get("contactNum");
+
+        //status of validity of the unique fields
+        $userNameValid =$user->getUsername()==$username? true: $this->checkUsername($username);
+        $emailNameValid = $user->getEmail()==$email?true:$this->checkEmail($email);
+        $nicValid = $employee->getNicNumber()==$nicNumber?true: $this->checkNic($nicNumber);
+        $phoneNumberValid=$employee->getContactNum()==$phoneNumber?true:$this->checkPhoneNumber($phoneNumber);
+
+
+        //adds all errors if there is any
+        if(!$userNameValid)array_push($errors,"USERNAME_EXISTS");
+        if(!$emailNameValid)array_push($errors,"EMAIL_EXISTS");
+        if(!$nicValid)array_push($errors,"NIC_EXISTS");
+        if(!$phoneNumberValid)array_push($errors,"CONTACT_NUMBER_EXISTS");
+
+        //returns the list of errors if there are any
+        if(!$userNameValid || !$emailNameValid || !$phoneNumberValid || !$nicValid) return new JsonResponse($errors,JsonResponse::HTTP_NOT_ACCEPTABLE);
+
+        //creates the fos_user
+
+        $user->setUsername($username);
+        $user->setEmail($email);
+
+        try{
+            $userManager->updateUser($user);
+        }catch (\Exception $e){
+            exit(\Doctrine\Common\Util\Debug::dump($e));
+        }
+
+        //creates employee
+
+        $body = $request->request->all();
+        $form = $this->createForm(CreateEmployee::class, $employee);
+        $form->handleRequest($request,false);
+
+
+        try{
+//            tries to persist the employer associated with the user object
+            $country = $em->getRepository("AboutgccTest2Bundle:Country")->findOneBy(array("id"=>$request->request->get("country")));
+            $form->submit($body);
+            $employee->setUserId($user);
+            if($country!=null){
+                $employee->setCountry($country);
+            }
+
+            $em = $this->getDoctrine()->getManager();
+            $em->persist($employee);
+            $em->flush();
+            $token = $this->get('lexik_jwt_authentication.encoder')
+                ->encode(['roles'=>$user->getRoles(),'username'=>$user->getUsername(),'id' => $user->getId()]);
+            // Return genereted tocken
+            $em->close();
+            return new JsonResponse(['token' => $token]);
+        }catch(\Exception $e){
+            //if there is something goes wrong this will terminate the process and undo all the queries
+            $em->close();
+            $userManager->deleteUser($user);
+            throw $e;
+        }finally{
+
+        }
+    }
+    /**
      * @param $username
      * @return bool|JsonResponse
      */

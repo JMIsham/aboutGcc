@@ -20,11 +20,9 @@ class CreateEmployer extends AbstractType
     {
         parent::buildForm($builder, $options);
         $builder->add("name")
-            ->add("userId",NumberType::class)
             ->add("contactNum")
             ->add("RegNumber")
             ->add("doorAddress",TextType::class)
-            ->add("country",NumberType::class)
             ->add("aboutUs",TextType::class)
         ;
 
